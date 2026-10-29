@@ -70,3 +70,7 @@ Additional regression checks cover mobile access to document controls and persis
 - Production-preview suite expanded to 19 checks covering four directions, pointer hit areas, arrow geometry, movement, undo/redo, persistence, invalid drops and pan.
 - First live run used newer tests against the previous deployed UI: 11 passed, two failed because the older UI lacks the new labelled handles. Do not treat this mixed-version run as a successful full live verification.
 - Touch dragging remains unverified; Chromium remains the automated browser target.
+- Parent verification for feature commit `3c50904`: formatting, TypeScript/Vite build and all 19 production-preview tests passed, exit 0.
+- [Remote CI and native Pages deployment](https://github.com/TimHacker/diagram-creator/actions/runs/40896775931): acceptance and deploy jobs both succeeded.
+- Final live HTTPS run: `PLAYWRIGHT_BASE_URL=https://timhacker.github.io/diagram-creator/ PLAYWRIGHT_PRODUCTION=true npm test -- --workers 4` passed all 19 tests, exit 0. This supersedes the earlier mixed-version failures.
+- After successful live verification, removed and verified absence of the obsolete source publishing secret and legacy deploy key. Issues 5 and 6 closed; Project items Done. Legacy repository/site retained.

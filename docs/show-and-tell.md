@@ -159,3 +159,7 @@
 - Retain the hidden legacy target handle and right-first source ordering so saved edges without explicit handle IDs keep their original anchors. New edges persist their chosen sides without a schema change.
 - Existing movement, pan, undo/redo, save/reload and property-panel connections remain covered. Touch dragging is not verified.
 - An initial live run against the older deployment passed 11 checks but failed two newly strengthened checks expecting the new handle labels. This was a test/deployed-version mismatch; full live verification must follow the feature deployment.
+- Parent verification: formatting, TypeScript/Vite build and all 19 production-preview tests passed before publishing feature commit `3c50904`.
+- [Feature acceptance and native Pages deployment](https://github.com/TimHacker/diagram-creator/actions/runs/40896775931) passed both jobs. All 19 tests then passed against `https://timhacker.github.io/diagram-creator/`, resolving the mixed-version failures above.
+- Only after live verification, removed the obsolete `PAGES_DEPLOY_KEY` source secret and legacy output-repository deploy key. Verified both absent; no repository deletion or old-site shutdown.
+- Deployment issue 5 and arrow issue 6 closed with verification evidence; both Project items moved to Done. Source remains PUBLIC, Pages uses workflow deployment and HTTPS is enforced.
