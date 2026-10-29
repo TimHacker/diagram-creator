@@ -74,6 +74,8 @@
 - Final full local suite: `npm test -- --workers 4` passed all 12 tests (exit 0). `npm run build` and `npm run format:check` both passed (exit 0).
 - Final contrast and CSS override corrections were followed by connector-label, PNG pixel, mobile and pointer-resize checks: 4 passed (exit 0), with build and formatting also passing.
 - [Runtime verification report](runtime-validation-report.md) summarises the verification environment and coverage.
+- Initial implementation published in commit `c6e45db`. [GitHub Actions run 40889739085](https://github.com/TimHacker/diagram-creator/actions/runs/40889739085) completed successfully: clean install, formatting, production build, Chromium acceptance suite and evidence upload all passed.
+- Final local preview: `http://127.0.0.1:5174/`. Port 5173 was occupied, so the final preview uses a separate port.
 
 ### Remaining Limitations
 
@@ -82,7 +84,7 @@
 - Automated browser coverage is Chromium only; Firefox and Safari have not been verified.
 - Very large image exports are rejected to bound browser memory consumption.
 - Chromium logs transient ResizeObserver notifications during pointer resize. Geometry, save/reload and rendering behaviour are regression-tested; warnings have not been suppressed or claimed fixed. Tracked in [issue 4](https://github.com/TimHacker/diagram-creator/issues/4).
-- Remote CI results and publication status will be appended after the final verification and push.
+- The site runs locally; source publication does not deploy a hosted website.
 
 ## Show-and-Tell Sequence
 
