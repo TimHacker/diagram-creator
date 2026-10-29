@@ -62,3 +62,11 @@ Additional regression checks cover mobile access to document controls and persis
 - New target: `https://timhacker.github.io/diagram-creator/`.
 - TypeScript/Vite build and focused production asset/home-link regression passed at `/diagram-creator/` (1 test, exit 0).
 - Legacy Pages site remains available during verification. No history rewrite or repository deletion.
+- Migration commit `fea6f89` passed all 13 production-preview tests and [native Pages CI/deployment](https://github.com/TimHacker/diagram-creator/actions/runs/40895386998). New HTTPS endpoint returned 200.
+
+## Drag Arrow Verification
+
+- Subagent ATDD evidence: basic existing drag confirmed, three missing-capability checks failed before implementation, then all six new drag checks passed.
+- Production-preview suite expanded to 19 checks covering four directions, pointer hit areas, arrow geometry, movement, undo/redo, persistence, invalid drops and pan.
+- First live run used newer tests against the previous deployed UI: 11 passed, two failed because the older UI lacks the new labelled handles. Do not treat this mixed-version run as a successful full live verification.
+- Touch dragging remains unverified; Chromium remains the automated browser target.

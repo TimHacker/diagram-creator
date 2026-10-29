@@ -471,16 +471,47 @@ a {
   background: var(--accent);
 }
 .app .react-flow__handle {
-  width: 7px;
-  height: 7px;
-  background: #fff;
-  border: 1.5px solid #7e9b9f;
-  opacity: 0;
+  width: 12px;
+  height: 12px;
+  background: transparent;
+  border: 0;
+  opacity: 0.55;
+  cursor: crosshair;
   transition: opacity 0.15s;
 }
+.app .react-flow__handle::before {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: -6px;
+  top: -6px;
+  border-radius: 50%;
+}
+.app .react-flow__handle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #118777;
+  pointer-events: none;
+}
 .react-flow__node:hover .react-flow__handle,
-.react-flow__node.selected .react-flow__handle {
+.react-flow__node.selected .react-flow__handle,
+.react-flow__handle.connectingfrom,
+.react-flow__handle.connectingto {
   opacity: 1;
+}
+.app .react-flow__handle:hover::after,
+.app .react-flow__handle.connectingfrom::after,
+.app .react-flow__handle.valid::after {
+  background: #118777;
+  box-shadow: 0 0 0 3px #11877726;
+}
+.app .react-flow__handle.legacy-target {
+  visibility: hidden;
+  pointer-events: none;
 }
 .react-flow__edge.selected {
   --edge-stroke: var(--accent);

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
 const nodes = (page: Page) => page.locator(".react-flow__node");
@@ -22,6 +22,60 @@ async function connectPair(page: Page) {
   await page
     .getByRole("button", { name: "Create connector", exact: true })
     .click();
+}
+
+async function dragBetween(page: Page, source: Locator, target: Locator) {
+  await source.hover();
+  const start = await source.boundingBox();
+  const end = await target.boundingBox();
+  expect(start).not.toBeNull();
+  expect(end).not.toBeNull();
+  await page.mouse.move(
+    start!.x + start!.width + 3,
+    start!.y + start!.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(end!.x + end!.width / 2, end!.y + end!.height / 2, {
+    steps: 20,
+  });
+  await page.mouse.up();
+}
+
+async function expectAttached(edge: Locator, source: Locator, target: Locator) {
+  for (const [handle, atEnd] of [
+    [source, false],
+    [target, true],
+  ] as const) {
+    await expect
+      .poll(async () => {
+        const box = await handle.boundingBox();
+        const side = await handle.getAttribute("data-handlepos");
+        const expectedX =
+          side === "left"
+            ? box!.x
+            : side === "right"
+              ? box!.x + box!.width
+              : box!.x + box!.width / 2;
+        const expectedY =
+          side === "top"
+            ? box!.y
+            : side === "bottom"
+              ? box!.y + box!.height
+              : box!.y + box!.height / 2;
+        const point = await edge.evaluate((element, end) => {
+          const path = element as SVGPathElement;
+          const point = path
+            .getPointAtLength(end ? path.getTotalLength() : 0)
+            .matrixTransform(path.getScreenCTM()!);
+          return { x: point.x, y: point.y };
+        }, atEnd);
+        return (
+          Math.hypot(point.x - expectedX, point.y - expectedY) /
+          (box!.width / 12)
+        );
+      })
+      .toBeLessThan(4);
+  }
 }
 
 test.beforeEach(async ({ page }) => {
@@ -84,6 +138,163 @@ test("A4: connectors remain attached when a shape moves", async ({ page }) => {
   await page.getByLabel("X position").blur();
   await expect(edge).not.toHaveAttribute("d", pathBefore!);
   await expect(page.locator(".react-flow__edge")).toHaveCount(1);
+  await expectAttached(
+    edge,
+    nodes(page)
+      .filter({ hasText: "API" })
+      .getByLabel("Right connection handle", { exact: true }),
+    nodes(page)
+      .filter({ hasText: "Browser" })
+      .getByLabel("Left connection handle", { exact: true }),
+  );
+});
+
+test("Drag arrows: right to left stays attached through movement, history and reload", async ({
+  page,
+}, testInfo) => {
+  const source = await addShape(page);
+  const sourceId = await source.getAttribute("data-id");
+  await addShape(page, "Ellipse");
+  const first = nodes(page).filter({ hasText: "Rectangle" });
+  const second = nodes(page).filter({ hasText: "Ellipse" });
+  const targetId = await second.getAttribute("data-id");
+  const start = first.locator(".react-flow__handle-right");
+  const end = second.getByLabel("Left connection handle", { exact: true });
+  await dragBetween(page, start, end);
+  const edge = page.locator(".react-flow__edge-path");
+  await expect(edge).toHaveCount(1);
+  await expect(edge).toHaveAttribute("marker-end", /url\(.+\)/);
+  await expectAttached(edge, start, end);
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(edge).toHaveCount(0);
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(edge).toHaveCount(1);
+  const pathBefore = await edge.getAttribute("d");
+  const box = await second.boundingBox();
+  await page.mouse.move(box!.x + 60, box!.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(box!.x + 95, box!.y + 130, { steps: 15 });
+  await page.mouse.up();
+  await expect(edge).not.toHaveAttribute("d", pathBefore!);
+  await expectAttached(edge, start, end);
+  await page.getByRole("button", { name: "Save diagram", exact: true }).click();
+  await page.reload();
+  await expect(edge).toHaveCount(1);
+  await expectAttached(edge, start, end);
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("diagram-creator:v1")!),
+  );
+  expect(saved.diagram.edges[0]).toMatchObject({
+    source: sourceId,
+    target: targetId,
+  });
+  await first.hover();
+  await page.screenshot({
+    path: testInfo.outputPath("drag-arrow-reloaded.png"),
+  });
+});
+
+for (const [sourceSide, targetSide] of [
+  ["left", "right"],
+  ["top", "bottom"],
+  ["bottom", "top"],
+]) {
+  test(`Drag arrows: ${sourceSide} to ${targetSide} creates a directional perimeter connection`, async ({
+    page,
+  }) => {
+    await addShape(page, "Diamond");
+    await addShape(page, "Ellipse");
+    const source = nodes(page).filter({ hasText: "Ellipse" });
+    const target = nodes(page).filter({ hasText: "Diamond" });
+    const sourceId = await source.getAttribute("data-id");
+    const targetId = await target.getAttribute("data-id");
+    const start = source.getByLabel(
+      `${sourceSide[0].toUpperCase() + sourceSide.slice(1)} connection handle`,
+      { exact: true },
+    );
+    const end = target.getByLabel(
+      `${targetSide[0].toUpperCase() + targetSide.slice(1)} connection handle`,
+      { exact: true },
+    );
+    await source.hover();
+    await expect(start).toHaveCSS("opacity", "1");
+    const hitArea = await start.evaluate((element) => {
+      const style = getComputedStyle(element, "::before");
+      return {
+        width: parseFloat(style.width),
+        height: parseFloat(style.height),
+      };
+    });
+    expect(hitArea.width).toBeGreaterThanOrEqual(24);
+    expect(hitArea.height).toBeGreaterThanOrEqual(24);
+    await dragBetween(page, start, end);
+    const edge = page.locator(".react-flow__edge-path");
+    await expect(edge).toHaveCount(1);
+    await expect(edge).toHaveAttribute("marker-end", /url\(.+\)/);
+    await expectAttached(edge, start, end);
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await expect(edge).toHaveCount(0);
+    await page.getByRole("button", { name: "Redo", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Save diagram", exact: true })
+      .click();
+    await page.reload();
+    await expectAttached(edge, start, end);
+    const saved = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("diagram-creator:v1")!),
+    );
+    expect(saved.diagram.edges[0]).toMatchObject({
+      source: sourceId,
+      target: targetId,
+      sourceHandle: sourceSide,
+      targetHandle: targetSide,
+    });
+  });
+}
+
+test("Drag arrows: empty canvas and self drops leave no dangling edge or history entry", async ({
+  page,
+}) => {
+  const shape = await addShape(page);
+  const handle = shape.locator(".react-flow__handle-right");
+  await handle.hover();
+  const box = await handle.boundingBox();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box!.x + 100, box!.y + 160, { steps: 15 });
+  await expect(page.locator(".react-flow__connection-path")).toHaveCount(1);
+  await page.mouse.up();
+  await expect(page.locator(".react-flow__connection-path")).toHaveCount(0);
+  await expect(page.locator(".react-flow__edge")).toHaveCount(0);
+  await dragBetween(
+    page,
+    handle,
+    shape.getByLabel("Left connection handle", { exact: true }),
+  );
+  await expect(page.locator(".react-flow__edge")).toHaveCount(0);
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(nodes(page)).toHaveCount(0);
+});
+
+test("Drag arrows: pan still moves the viewport without moving shapes", async ({
+  page,
+}) => {
+  const shape = await addShape(page);
+  await expect(shape).toBeVisible();
+  const position = await shape.evaluate(
+    (element) => getComputedStyle(element).transform,
+  );
+  await page.getByRole("button", { name: "Pan", exact: true }).click();
+  const viewport = page.locator(".react-flow__viewport");
+  const before = await viewport.getAttribute("style");
+  const box = await shape.boundingBox();
+  await page.mouse.move(box!.x + 50, box!.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(box!.x + 100, box!.y + 100, { steps: 15 });
+  await page.mouse.up();
+  await expect(viewport).not.toHaveAttribute("style", before!);
+  await expect(shape).toHaveCSS("transform", position);
+  await expect(page.locator(".react-flow__edge")).toHaveCount(0);
 });
 
 test("A5: deleting a shape deletes attached connectors and undo restores both", async ({
@@ -139,6 +350,13 @@ test("A8: save and reload preserves labels, geometry and connectors", async ({
   await expect(page.locator(".react-flow__edge")).toHaveCount(1);
   const api = nodes(page).filter({ hasText: "API" });
   await expect(api).toHaveCSS("width", "230px");
+  await expectAttached(
+    page.locator(".react-flow__edge-path"),
+    api.getByLabel("Right connection handle", { exact: true }),
+    nodes(page)
+      .filter({ hasText: "Browser" })
+      .getByLabel("Left connection handle", { exact: true }),
+  );
   await api.click();
   await expect(page.getByLabel("X position")).toHaveValue("540");
 });

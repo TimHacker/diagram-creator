@@ -147,3 +147,15 @@
 - Replace cross-repository SSH publishing with native Pages artefact upload and deployment, gated by the same production acceptance job. Deployment alone receives Pages write and identity-token permissions.
 - Focused production-path check passed at `/diagram-creator/` after a successful TypeScript/Vite build. Full local, CI and live results are recorded below as verified.
 - Both Pages project URLs share the same origin and local-storage key; the path change does not itself isolate existing saved diagrams. Localhost remains a separate origin.
+- Migration commit `fea6f89`: all 13 production-preview tests passed; [native Pages CI and deployment](https://github.com/TimHacker/diagram-creator/actions/runs/40895386998) succeeded and the new HTTPS URL returned 200.
+
+## 2026-10-29: Drag-to-Connect Arrows
+
+- User requested a subagent to implement drag-and-drop arrows; implementation delegated with existing React Flow behaviour and ATDD constraints.
+- [Issue 6](https://github.com/TimHacker/diagram-creator/issues/6) records Given/When/Then criteria and is added to the Project.
+- Basic right-to-left handle dragging already existed. The missing capability was discoverable, generously sized handles and connections originating from all four sides; this is an enhancement, not a claim that no dragging existed.
+- Subagent reported three new capability tests failing before implementation, followed by six passing drag tests and 19 passing production tests overall.
+- Four perimeter handles use React Flow loose connection mode, with arrow direction determined by the drag origin. Same-shape and empty-canvas drops produce no edge or undo entry.
+- Retain the hidden legacy target handle and right-first source ordering so saved edges without explicit handle IDs keep their original anchors. New edges persist their chosen sides without a schema change.
+- Existing movement, pan, undo/redo, save/reload and property-panel connections remain covered. Touch dragging is not verified.
+- An initial live run against the older deployment passed 11 checks but failed two newly strengthened checks expecting the new handle labels. This was a test/deployed-version mismatch; full live verification must follow the feature deployment.

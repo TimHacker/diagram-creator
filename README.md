@@ -24,7 +24,7 @@ Open the URL printed by Vite. The initial service architecture is fully editable
 - Add rectangles, ellipses and diamonds from the library.
 - Move shapes by dragging; resize with corner handles or geometry fields.
 - Edit a selected shape or connector in Properties.
-- Connect shapes by dragging between connection handles, or choosing **Connect to** in Properties.
+- Connect shapes by dragging between the handles on any of their four sides, or choosing **Connect to** in Properties. Arrows point from the dragged source to the target.
 - Undo/redo from the toolbar or with Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z. Delete/Backspace deletes the selection.
 - **Save** (Cmd/Ctrl+S outside an input) stores one editable diagram in this browser, for this site origin. Save again to replace it.
 - **Export PNG** downloads the entire diagram, including off-screen shapes, without editor controls.
@@ -42,7 +42,7 @@ npm run build
 npm run format:check
 ```
 
-The Playwright suite exercises the ten user-approved Given/When/Then scenarios, plus mobile layout and pointer-resize persistence. Each test uses isolated browser storage. Tests start their own Vite server on port 4173. CI repeats formatting, build and Chromium checks and uploads test evidence.
+The Playwright suite exercises the ten user-approved Given/When/Then scenarios, plus drag-to-connect arrows, mobile layout and pointer-resize persistence. Pointer tests cover all four connection directions, history, persistence, invalid drops and panning. Each test uses isolated browser storage. Tests start their own Vite server on port 4173. CI repeats formatting, build and Chromium checks and uploads test evidence.
 
 CI tests production output at the real Pages project path, including an additional asset and home-link regression check:
 

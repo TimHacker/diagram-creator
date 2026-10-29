@@ -5,6 +5,7 @@ import {
   ReactFlowProvider,
   Background,
   BackgroundVariant,
+  ConnectionMode,
   Handle,
   Position,
   NodeResizer,
@@ -84,7 +85,12 @@ function ShapeNode({ data, selected }: NodeProps<DiagramNode>) {
         minHeight={70}
         color="#118777"
       />
-      <Handle type="target" position={Position.Left} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="legacy-target"
+        isConnectable={false}
+      />
       <div
         className={`diagram-shape ${data.shape}`}
         style={{ "--shape-colour": data.colour } as CSSProperties}
@@ -97,7 +103,34 @@ function ShapeNode({ data, selected }: NodeProps<DiagramNode>) {
           <span className="shape-label">{data.label}</span>
         </div>
       </div>
-      <Handle type="source" position={Position.Right} />
+      <Handle
+        id="right"
+        type="source"
+        position={Position.Right}
+        title="Connect arrow from or to right"
+        aria-label="Right connection handle"
+      />
+      <Handle
+        id="left"
+        type="source"
+        position={Position.Left}
+        title="Connect arrow from or to left"
+        aria-label="Left connection handle"
+      />
+      <Handle
+        id="top"
+        type="source"
+        position={Position.Top}
+        title="Connect arrow from or to top"
+        aria-label="Top connection handle"
+      />
+      <Handle
+        id="bottom"
+        type="source"
+        position={Position.Bottom}
+        title="Connect arrow from or to bottom"
+        aria-label="Bottom connection handle"
+      />
     </>
   );
 }
@@ -645,6 +678,10 @@ function Editor() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={connect}
+          connectionMode={ConnectionMode.Loose}
+          isValidConnection={(connection) =>
+            connection.source !== connection.target
+          }
           onNodeDragStart={checkpoint}
           onMove={(_event, viewport) => setZoom(viewport.zoom)}
           onNodeClick={() => setTarget("")}
