@@ -27,7 +27,6 @@ import {
   ChevronDown,
   ChevronRight,
   Circle,
-  Database,
   Diamond,
   FilePlus2,
   GitBranch,
@@ -35,13 +34,11 @@ import {
   Layers2,
   Maximize,
   Minus,
-  Monitor,
   MousePointer2,
   Plus,
   Redo2,
-  Route,
   Save,
-  Server,
+  Search,
   Shapes,
   Square,
   Trash2,
@@ -60,6 +57,7 @@ import {
   storageKey,
 } from "./model";
 import type { Diagram, DiagramNode, Shape } from "./model";
+import { IconGlyph, findIcon, iconPacks, matchesIcon } from "./icons";
 import "@xyflow/react/dist/style.css";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/500.css";
@@ -67,16 +65,7 @@ import "@fontsource/dm-sans/600.css";
 import "@fontsource/space-grotesk/500.css";
 import "./styles.css";
 
-const symbols = {
-  browser: Monitor,
-  gateway: Route,
-  server: Server,
-  database: Database,
-  queue: Layers2,
-};
-
 function ShapeNode({ data, selected }: NodeProps<DiagramNode>) {
-  const Icon = data.symbol ? symbols[data.symbol] : null;
   return (
     <>
       <NodeResizer
@@ -96,7 +85,7 @@ function ShapeNode({ data, selected }: NodeProps<DiagramNode>) {
         style={{ "--shape-colour": data.colour } as CSSProperties}
       >
         <div className="shape-content">
-          {Icon && <Icon size={22} strokeWidth={1.6} />}
+          <IconGlyph id={data.symbol} />
           {data.caption && (
             <span className="shape-caption">{data.caption}</span>
           )}
@@ -223,6 +212,7 @@ function Editor() {
   const [target, setTarget] = useState("");
   const [exporting, setExporting] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [iconQuery, setIconQuery] = useState("");
   const history = useRef<{ past: Diagram[]; future: Diagram[] }>({
     past: [],
     future: [],
@@ -331,7 +321,7 @@ function Editor() {
     };
   });
 
-  function addShape(shape: Shape) {
+  function addShape(shape: Shape, symbol?: string) {
     const count = diagram.nodes.length;
     const viewport = flow.getViewport();
     const centre = flow.screenToFlowPosition({
@@ -347,8 +337,10 @@ function Editor() {
       },
       data: {
         shape,
-        label: shape[0].toUpperCase() + shape.slice(1),
+        label:
+          findIcon(symbol)?.label ?? shape[0].toUpperCase() + shape.slice(1),
         colour: colours[0],
+        ...(symbol && { symbol }),
       },
       style: { width: 176, height: 100 },
       selected: true,
@@ -605,6 +597,56 @@ function Editor() {
           <Workflow size={16} />
           <span>Service architecture</span>
         </button>
+        <div className="library-section second-section">
+          <span className="section-label">ICON PACKS</span>
+        </div>
+        <label className="icon-search">
+          <Search size={14} />
+          <input
+            type="search"
+            aria-label="Search icons"
+            placeholder="Search icons"
+            value={iconQuery}
+            onChange={(event) => setIconQuery(event.target.value)}
+          />
+        </label>
+        {iconPacks.map((pack) => {
+          const icons = pack.icons.filter((icon) =>
+            matchesIcon(icon, iconQuery.trim()),
+          );
+          return (
+            <section
+              key={pack.id}
+              className="icon-pack"
+              role="group"
+              aria-label={`${pack.name} icons`}
+            >
+              <div className="icon-pack-heading">
+                <span>{pack.name}</span>
+                <span className="icon-pack-licence">
+                  {pack.source} · {pack.licence}
+                </span>
+              </div>
+              {icons.length ? (
+                <div className="icon-grid">
+                  {icons.map((icon) => (
+                    <button
+                      key={icon.id}
+                      aria-label={`Add ${icon.label} icon`}
+                      title={icon.label}
+                      data-slug={icon.simple?.slug}
+                      onClick={() => addShape("rectangle", icon.id)}
+                    >
+                      <IconGlyph id={icon.id} size={20} />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <span className="icon-empty">No matching icons</span>
+              )}
+            </section>
+          );
+        })}
         <div className="library-footer">
           <span className="workspace-dot" />
           <span>Local workspace</span>
@@ -773,6 +815,32 @@ function Editor() {
                 <option value="rectangle">Rectangle</option>
                 <option value="ellipse">Ellipse</option>
                 <option value="diamond">Diamond</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>Icon</span>
+              <select
+                aria-label="Icon"
+                value={findIcon(selectedNode.data.symbol)?.id ?? ""}
+                onChange={(event) =>
+                  updateNode({
+                    data: {
+                      ...selectedNode.data,
+                      symbol: event.target.value || undefined,
+                    },
+                  })
+                }
+              >
+                <option value="">No icon</option>
+                {iconPacks.map((pack) => (
+                  <optgroup key={pack.id} label={pack.name}>
+                    {pack.icons.map((icon) => (
+                      <option key={icon.id} value={icon.id}>
+                        {icon.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </label>
             <div className="field">
