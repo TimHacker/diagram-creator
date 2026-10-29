@@ -163,3 +163,30 @@
 - [Feature acceptance and native Pages deployment](https://github.com/TimHacker/diagram-creator/actions/runs/40896775931) passed both jobs. All 19 tests then passed against `https://timhacker.github.io/diagram-creator/`, resolving the mixed-version failures above.
 - Only after live verification, removed the obsolete `PAGES_DEPLOY_KEY` source secret and legacy output-repository deploy key. Verified both absent; no repository deletion or old-site shutdown.
 - Deployment issue 5 and arrow issue 6 closed with verification evidence; both Project items moved to Done. Source remains PUBLIC, Pages uses workflow deployment and HTTPS is enforced.
+
+## 2026-10-29: Architecture Icon Packs
+
+### Agreed Decisions
+
+- [Issue 2](https://github.com/TimHacker/diagram-creator/issues/2): user chose Simple Icons (CC0) for cloud and vendor logos and Lucide (ISC, already bundled) for the provider-neutral pack.
+- AWS and Azure logos are out of scope: Simple Icons no longer carries them, and the official architecture icon terms do not clearly permit redistribution in this public app.
+- Eight icon scenarios (I1–I8) approved before implementation and [recorded on the issue](https://github.com/TimHacker/diagram-creator/issues/2#issuecomment-6500904643): packs listed with licences; add icon from either pack; cross-pack search; change/remove icon with undo; save/reload including legacy symbols; icons in PNG; offline use with no requests; third-party notice.
+
+### Implementation Choices
+
+- Icons are compiled into the bundle (23 Lucide, 27 Simple Icons), so nothing is fetched at runtime. Tree-shaking keeps the added JavaScript to about 43 kB before compression.
+- Icon IDs are namespaced (`generic/database`, `cloud/kubernetes`). Diagrams saved with the earlier bare symbols (`database`, `queue` and so on) still open and map to the generic pack.
+- Only Simple Icons entries without a separate per-icon licence are bundled; Apache Kafka (Apache-2.0) is therefore excluded. I8 checks this against the installed package data.
+
+### ATDD Evidence
+
+- Red baseline: `npm test -- tests/icons.spec.ts --workers 4 --timeout 5000` gave 8 failed, 0 passed, all for missing icon UI or notice file.
+- After implementation, the icon spec gave 7 passed, 1 failed (missing `THIRD_PARTY_NOTICES.md`). After adding the notice: 8 passed.
+- Full production-path gate: `npm run format:check`, `DEPLOY_BASE_PATH=/diagram-creator/ npm run build` and `PLAYWRIGHT_PRODUCTION=true npm test` all passed (27 passed, 0 failed).
+- Desktop (1440 x 900) and mobile (390 x 844) layouts were inspected. On mobile the packs collapse to a single icon column, without search or pack headings.
+
+### Limitations
+
+- Brand logos remain trademarks of their owners; CC0 does not grant trademark rights.
+- The main bundle is now slightly above Vite's 500 kB advisory threshold.
+- Mobile has no icon search; users can scroll the column or choose icons in Properties.

@@ -7,7 +7,7 @@ export type DiagramNode = Node<
     label: string;
     shape: Shape;
     colour: string;
-    symbol?: "browser" | "gateway" | "server" | "database" | "queue";
+    symbol?: string;
     caption?: string;
   },
   "shape"
@@ -50,7 +50,7 @@ export function exampleDiagram(): Diagram {
         label: "Web client",
         shape: "rectangle",
         colour: colours[2],
-        symbol: "browser",
+        symbol: "generic/browser",
         caption: "PRESENTATION",
       },
       style: { width: 170, height: 110 },
@@ -63,7 +63,7 @@ export function exampleDiagram(): Diagram {
         label: "API gateway",
         shape: "rectangle",
         colour: colours[1],
-        symbol: "gateway",
+        symbol: "generic/gateway",
         caption: "ROUTING",
       },
       style: { width: 170, height: 110 },
@@ -76,7 +76,7 @@ export function exampleDiagram(): Diagram {
         label: "Core service",
         shape: "rectangle",
         colour: colours[0],
-        symbol: "server",
+        symbol: "generic/server",
         caption: "APPLICATION",
       },
       style: { width: 170, height: 110 },
@@ -89,7 +89,7 @@ export function exampleDiagram(): Diagram {
         label: "Job worker",
         shape: "rectangle",
         colour: colours[3],
-        symbol: "queue",
+        symbol: "generic/queue",
         caption: "BACKGROUND",
       },
       style: { width: 170, height: 110 },
@@ -102,7 +102,7 @@ export function exampleDiagram(): Diagram {
         label: "PostgreSQL",
         shape: "ellipse",
         colour: colours[4],
-        symbol: "database",
+        symbol: "generic/database",
         caption: "PERSISTENCE",
       },
       style: { width: 175, height: 120 },
@@ -167,7 +167,8 @@ export function readSaved(): {
         !Number.isFinite(node.position?.x) ||
         !Number.isFinite(node.position?.y) ||
         typeof node.data?.label !== "string" ||
-        !["rectangle", "ellipse", "diamond"].includes(node.data.shape)
+        !["rectangle", "ellipse", "diamond"].includes(node.data.shape) ||
+        !["undefined", "string"].includes(typeof node.data.symbol)
       )
         throw new Error("Invalid shape");
     }

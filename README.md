@@ -22,6 +22,7 @@ Open the URL printed by Vite. The initial service architecture is fully editable
 ## Editing and Saving
 
 - Add rectangles, ellipses and diamonds from the library.
+- Add icons from two bundled icon packs: **Generic architecture** (Lucide, ISC) and **Cloud & platforms** (Simple Icons, CC0). Search filters both packs. Change or remove a shape's icon in Properties.
 - Move shapes by dragging; resize with corner handles or geometry fields.
 - Edit a selected shape or connector in Properties.
 - Connect shapes by dragging between the handles on any of their four sides, or choosing **Connect to** in Properties. Arrows point from the dragged source to the target.
@@ -31,7 +32,11 @@ Open the URL printed by Vite. The initial service architecture is fully editable
 
 Saving is explicit, not automatic. Browser storage is not a backup: clearing site data removes the saved diagram. The development and preview ports have separate storage. Image sharing does not preserve editability or provide live collaboration.
 
-Editing, saving and PNG export work without network access after the app has loaded. Offline startup is not supported. Fonts are bundled locally, including an embedded font for image export.
+Editing, saving, adding icons and PNG export work without network access after the app has loaded. Offline startup is not supported. Fonts and icons are bundled locally, including an embedded font for image export.
+
+## Icon Licences
+
+Icon pack sources, licences, versions and trademark caveats are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Brand logos remain trademarks of their owners. AWS and Azure icons are not included.
 
 ## Acceptance Tests
 
@@ -42,7 +47,7 @@ npm run build
 npm run format:check
 ```
 
-The Playwright suite exercises the ten user-approved Given/When/Then scenarios, plus drag-to-connect arrows, mobile layout and pointer-resize persistence. Pointer tests cover all four connection directions, history, persistence, invalid drops and panning. Each test uses isolated browser storage. Tests start their own Vite server on port 4173. CI repeats formatting, build and Chromium checks and uploads test evidence.
+The Playwright suite exercises the ten user-approved first-release Given/When/Then scenarios, the eight approved icon-pack scenarios (I1–I8), plus drag-to-connect arrows, mobile layout and pointer-resize persistence. Pointer tests cover all four connection directions, history, persistence, invalid drops and panning. Each test uses isolated browser storage. Tests start their own Vite server on port 4173. CI repeats formatting, build and Chromium checks and uploads test evidence.
 
 CI tests production output at the real Pages project path, including an additional asset and home-link regression check:
 
@@ -78,6 +83,6 @@ No paid resources or account upgrades were provisioned. Hosting uses public-repo
 
 ## Implementation
 
-React, TypeScript and Vite, with React Flow's MIT-licensed core for canvas interactions, html-to-image for PNG export, Lucide icons and locally bundled DM Sans and Space Grotesk fonts. No backend, cloud resources, authentication, tracking or paid React Flow components.
+React, TypeScript and Vite, with React Flow's MIT-licensed core for canvas interactions, html-to-image for PNG export, Lucide and Simple Icons icon packs, and locally bundled DM Sans and Space Grotesk fonts. No backend, cloud resources, authentication, tracking or paid React Flow components.
 
 Very large PNG exports are rejected to limit browser memory use. Browser verification currently targets Chromium; Safari and Firefox remain unverified. Chromium may emit transient ResizeObserver notifications while dragging resize handles; resize, save and reload are covered by regression tests.
