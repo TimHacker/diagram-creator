@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      DEPLOY_BASE_PATH: /diagram-creator-site/
+      DEPLOY_BASE_PATH: /diagram-creator/
       PLAYWRIGHT_PRODUCTION: "true"
     steps:
       - uses: actions/checkout@v4
@@ -27,12 +27,10 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm test -- --reporter=list,html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         with:
-          name: verified-static-site
           path: dist/
-          include-hidden-files: true
           retention-days: 7
       - uses: actions/upload-artifact@v4
         if: always()
@@ -48,27 +46,16 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     concurrency:
       group: diagram-creator-pages
       cancel-in-progress: false
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: verified-static-site
-          path: dist/
-      - uses: webfactory/ssh-agent@v0.9.1
-        with:
-          ssh-private-key: ${{ secrets.PAGES_DEPLOY_KEY }}
-      - name: Publish verified files
-        run: |
-          git clone --depth 1 git@github.com:TimHacker/diagram-creator-site.git published
-          rsync -a --delete --exclude=.git/ dist/ published/
-          git -C published config user.name 'github-actions[bot]'
-          git -C published config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git -C published add --all
-          if git -C published diff --cached --quiet; then
-            echo 'Published files are already current.'
-          else
-            git -C published commit -m "Deploy verified source ${GITHUB_SHA}"
-            git -C published push origin main
-          fi
+      - name: Deploy verified site
+        id: deployment
+        uses: actions/deploy-pages@v4

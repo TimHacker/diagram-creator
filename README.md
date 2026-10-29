@@ -4,9 +4,9 @@ A browser-based workspace for developer diagrams. Create shapes, attach connecto
 
 ## Shared Site
 
-[Open Diagram Creator](https://timhacker.github.io/diagram-creator-site/).
+[Open Diagram Creator](https://timhacker.github.io/diagram-creator/).
 
-The site is public; the source repository remains private. Each visitor's diagrams stay in their own browser. Sharing the URL shares the editor, not a saved diagram; export a PNG to share a drawing. Diagrams saved on localhost are not automatically transferred to the live site.
+The site and source repository are public. Each visitor's diagrams stay in their own browser. Sharing the URL shares the editor, not a saved diagram; export a PNG to share a drawing. Diagrams saved on localhost are not automatically transferred to the live site.
 
 ## Run Locally
 
@@ -47,21 +47,21 @@ The Playwright suite exercises the ten user-approved Given/When/Then scenarios, 
 CI tests production output at the real Pages project path, including an additional asset and home-link regression check:
 
 ```sh
-DEPLOY_BASE_PATH=/diagram-creator-site/ npm run build
-DEPLOY_BASE_PATH=/diagram-creator-site/ PLAYWRIGHT_PRODUCTION=true npm test
+DEPLOY_BASE_PATH=/diagram-creator/ npm run build
+DEPLOY_BASE_PATH=/diagram-creator/ PLAYWRIGHT_PRODUCTION=true npm test
 ```
 
 To run the same suite against the deployed site without starting a local server:
 
 ```sh
-PLAYWRIGHT_BASE_URL=https://timhacker.github.io/diagram-creator-site/ PLAYWRIGHT_PRODUCTION=true npm test
+PLAYWRIGHT_BASE_URL=https://timhacker.github.io/diagram-creator/ PLAYWRIGHT_PRODUCTION=true npm test
 ```
 
 Delivery uses ATDD: agree observable scenarios, write and run failing acceptance tests, implement, then verify. [The show-and-tell log](docs/show-and-tell.md) records decisions, red/green evidence, findings and limitations.
 
 ## Delivery Tracking
 
-- [Private repository](https://github.com/TimHacker/diagram-creator)
+- [Public repository](https://github.com/TimHacker/diagram-creator)
 - [GitHub Project](https://github.com/users/TimHacker/projects/3)
 - [First release and acceptance criteria](https://github.com/TimHacker/diagram-creator/issues/1)
 - [Icon packs backlog](https://github.com/TimHacker/diagram-creator/issues/2)
@@ -70,11 +70,11 @@ Delivery uses ATDD: agree observable scenarios, write and run failing acceptance
 
 ## Deployment
 
-GitHub Pages rejected hosting directly from the private source repository on the current account plan. The separate [public site repository](https://github.com/TimHacker/diagram-creator-site) contains compiled HTML, JavaScript, CSS and fonts only, with no source maps, tests, source tree or private documentation.
+GitHub Pages hosts the public source repository directly at `/diagram-creator/`. The previous build-output repository is retained as a legacy site; it is no longer the deployment target.
 
-The Actions workflow builds for `/diagram-creator-site/`, runs production acceptance tests, and uploads the verified artefact. On successful main-branch runs, a separate publishing job copies that exact artefact into the public site repository. Its write credential is a deploy key restricted to that repository, stored as the `PAGES_DEPLOY_KEY` Actions secret. Pull requests cannot run the publishing job. Pages publishes from the public repository's main branch.
+The Actions workflow builds for `/diagram-creator/`, runs production acceptance tests, and uploads the verified Pages artefact. On successful main-branch runs, the deployment job publishes that exact artefact using native Pages permissions and GitHub's short-lived identity token. No cross-repository SSH credential is needed. Pull requests cannot run the deployment job.
 
-No paid resources or account upgrades were provisioned. Hosting uses public-repository Pages; source CI remains subject to your existing Actions allowance. Public JavaScript bundles are downloadable, as with any client-side application.
+No paid resources or account upgrades were provisioned. Hosting uses public-repository Pages. Public JavaScript bundles are downloadable, as with any client-side application.
 
 ## Implementation
 

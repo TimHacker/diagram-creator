@@ -46,4 +46,19 @@ Additional regression checks cover mobile access to document controls and persis
 - Production-preview suite: 13 passed, 0 failed, exit 0, using `DEPLOY_BASE_PATH=/diagram-creator-site/ PLAYWRIGHT_PRODUCTION=true npm test -- --workers 4` after a production build.
 - Formatting and production build passed, exit 0.
 - Static-output assertion verified the Pages marker, absence of source maps, and absence of source/test folders before initial publication.
-- Initial public-site asset commit: `4dd15fb`. Remote Pages completion, publishing CI and live-site tests are pending separate verification.
+- Initial public-site asset commit: `4dd15fb`. [Pages deployment](https://github.com/TimHacker/diagram-creator-site/actions/runs/40893444138) and [production acceptance/publishing CI](https://github.com/TimHacker/diagram-creator/actions/runs/40893698447) both completed successfully.
+- Live HTTPS suite: 13 passed, 0 failed, exit 0, using `PLAYWRIGHT_BASE_URL=https://timhacker.github.io/diagram-creator-site/ PLAYWRIGHT_PRODUCTION=true npm test -- --workers 4`.
+- Live HTTPS returned 200 and exactly matched verified production HTML. HTTP redirected to HTTPS; source remained private and site output public.
+- Deployed desktop/mobile screenshots were inspected; mobile Properties did not overlap the canvas and there was no horizontal overflow.
+
+## Public-Source Privacy Gate
+
+- Gitleaks 8.30.1 full-history scan: three commits, approximately 146 KB, no leaks found, exit 0.
+- Commit author/committer metadata includes a work email address. Publication was initially held for explicit confirmation; the user subsequently approved going public and moving hosting. The successful credential scan is not a guarantee that all repository metadata is suitable for publication.
+
+## Single-Repository Migration
+
+- Main repository visibility verified PUBLIC; native Actions-based Pages configured with HTTPS enforced.
+- New target: `https://timhacker.github.io/diagram-creator/`.
+- TypeScript/Vite build and focused production asset/home-link regression passed at `/diagram-creator/` (1 test, exit 0).
+- Legacy Pages site remains available during verification. No history rewrite or repository deletion.

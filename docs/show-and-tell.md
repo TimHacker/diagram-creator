@@ -117,10 +117,33 @@
 - Full production-preview gate: 13 passed, 0 failed (exit 0), plus passing build and formatting.
 - Pre-publication assertion caught a missing `.nojekyll` marker; no files were uploaded by that failed attempt. Added a concrete marker and rebuilt successfully before publication.
 - Published initial verified assets in public-site commit `4dd15fb`; Pages accepted configuration with HTTPS enforced.
-- Remote Pages deployment and live-site verification are checked separately from local production tests; results will be appended when confirmed.
+- [Initial Pages deployment](https://github.com/TimHacker/diagram-creator-site/actions/runs/40893444138) completed successfully.
+- [Production acceptance and publishing workflow](https://github.com/TimHacker/diagram-creator/actions/runs/40893698447) passed both jobs: acceptance and restricted-key publishing.
+- Live HTTPS suite: 13 passed, 0 failed (exit 0), including saving/reloading, offline export and whole-diagram PNG pixels.
+- HTTPS returned 200 with HTML matching the verified production output; HTTP redirected to HTTPS. Source visibility remained PRIVATE and site-output visibility PUBLIC.
+- Deployed desktop and mobile layouts were inspected. At 390 x 844, Properties starts exactly at the canvas bottom with no horizontal overflow.
 
 ### Operational Trade-offs
 
 - Separate repositories preserve private source without a plan upgrade, at the cost of a small cross-repository publishing job and one restricted deploy key.
 - The site itself is public, not team-authenticated. There is still no server-side diagram storage or live collaboration.
 - GitHub Pages hosting uses the public-repository allowance; existing private-repository Actions usage still applies. No billing settings were changed.
+
+## 2026-10-29: Public Source Review
+
+- User requested a public main repository and single-repository deployment, conditional on there being no sensitive content.
+- Gitleaks 8.30.1 scanned all three reachable Git commits, approximately 146 KB: no leaks found, exit 0. No detected credential values were printed.
+- Reviewed tracked files, decision logs, issue bodies/comments and commit identities. No confidential application data or embedded credentials were identified in the reviewed content.
+- Existing author and committer metadata contains the user's work email address. Making the repository public would expose that metadata; a clean credential scan does not establish consent to disclose personal information.
+- Asked whether that existing metadata could be published; the user was unavailable to confirm. Kept the main repository private and the current live site and publishing workflow unchanged.
+- No history rewrite, repository deletion, visibility change or deployment-key revocation was performed.
+- Next decision: explicit confirmation that the existing commit metadata may become public, or a separately agreed history-privacy approach. Once resolved, migrate Pages to the main repository, replace the cross-repository key with native Pages permissions, and verify the replacement before retiring the old setup.
+
+## 2026-10-29: Public Repository Migration
+
+- User explicitly approved going public and moving hosting after the work-email disclosure warning. Existing history is retained; no force push or history rewrite.
+- Main repository visibility verified PUBLIC; native Actions-based Pages enabled with HTTPS enforced.
+- New URL: `https://timhacker.github.io/diagram-creator/`. The legacy output repository is retained, not deleted.
+- Replace cross-repository SSH publishing with native Pages artefact upload and deployment, gated by the same production acceptance job. Deployment alone receives Pages write and identity-token permissions.
+- Focused production-path check passed at `/diagram-creator/` after a successful TypeScript/Vite build. Full local, CI and live results are recorded below as verified.
+- Both Pages project URLs share the same origin and local-storage key; the path change does not itself isolate existing saved diagrams. Localhost remains a separate origin.
