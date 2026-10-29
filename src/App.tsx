@@ -65,6 +65,9 @@ import "@fontsource/dm-sans/600.css";
 import "@fontsource/space-grotesk/500.css";
 import "./styles.css";
 
+// Must match the mobile breakpoint in styles.css, where icon search is hidden.
+const compactLayout = "(max-width: 760px)";
+
 function ShapeNode({ data, selected }: NodeProps<DiagramNode>) {
   return (
     <>
@@ -213,6 +216,15 @@ function Editor() {
   const [exporting, setExporting] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [iconQuery, setIconQuery] = useState("");
+  const [compact, setCompact] = useState(
+    () => matchMedia(compactLayout).matches,
+  );
+  useEffect(() => {
+    const query = matchMedia(compactLayout);
+    const update = () => setCompact(query.matches);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
   const history = useRef<{ past: Diagram[]; future: Diagram[] }>({
     past: [],
     future: [],
@@ -611,8 +623,8 @@ function Editor() {
           />
         </label>
         {iconPacks.map((pack) => {
-          const icons = pack.icons.filter((icon) =>
-            matchesIcon(icon, iconQuery.trim()),
+          const icons = pack.icons.filter(
+            (icon) => compact || matchesIcon(icon, iconQuery.trim()),
           );
           return (
             <section

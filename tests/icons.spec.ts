@@ -114,6 +114,25 @@ test("I3: searching filters icons across both packs", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("I3: a hidden mobile search does not keep filtering icons", async ({
+  page,
+}) => {
+  const search = page.getByRole("searchbox", { name: "Search icons" });
+  await search.fill("data");
+  await expect(
+    page.getByRole("button", { name: "Add User icon", exact: true }),
+  ).toHaveCount(0);
+  await expect(search).toHaveCSS("color", "rgb(98, 114, 124)");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(search).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Add User icon", exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "Add Kubernetes icon", exact: true }),
+  ).toHaveCount(1);
+});
+
 test("I4: changing or removing a shape icon in Properties is undoable", async ({
   page,
 }) => {
