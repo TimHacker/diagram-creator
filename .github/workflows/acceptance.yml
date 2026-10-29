@@ -1,9 +1,10 @@
-name: Acceptance Tests
+name: Acceptance Tests and Deploy
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,6 +13,9 @@ jobs:
   acceptance:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      DEPLOY_BASE_PATH: /diagram-creator-site/
+      PLAYWRIGHT_PRODUCTION: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,6 +28,13 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm test -- --reporter=list,html
       - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          name: verified-static-site
+          path: dist/
+          include-hidden-files: true
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-evidence
@@ -31,3 +42,33 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 14
+
+  deploy:
+    needs: acceptance
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: diagram-creator-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-static-site
+          path: dist/
+      - uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.PAGES_DEPLOY_KEY }}
+      - name: Publish verified files
+        run: |
+          git clone --depth 1 git@github.com:TimHacker/diagram-creator-site.git published
+          rsync -a --delete --exclude=.git/ dist/ published/
+          git -C published config user.name 'github-actions[bot]'
+          git -C published config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C published add --all
+          if git -C published diff --cached --quiet; then
+            echo 'Published files are already current.'
+          else
+            git -C published commit -m "Deploy verified source ${GITHUB_SHA}"
+            git -C published push origin main
+          fi

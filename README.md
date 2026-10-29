@@ -2,6 +2,12 @@
 
 A browser-based workspace for developer diagrams. Create shapes, attach connectors, edit labels and colours, and export the complete diagram as a PNG.
 
+## Shared Site
+
+[Open Diagram Creator](https://timhacker.github.io/diagram-creator-site/).
+
+The site is public; the source repository remains private. Each visitor's diagrams stay in their own browser. Sharing the URL shares the editor, not a saved diagram; export a PNG to share a drawing. Diagrams saved on localhost are not automatically transferred to the live site.
+
 ## Run Locally
 
 Use Node.js 24 LTS (minimum 22.12) and npm.
@@ -38,6 +44,19 @@ npm run format:check
 
 The Playwright suite exercises the ten user-approved Given/When/Then scenarios, plus mobile layout and pointer-resize persistence. Each test uses isolated browser storage. Tests start their own Vite server on port 4173. CI repeats formatting, build and Chromium checks and uploads test evidence.
 
+CI tests production output at the real Pages project path, including an additional asset and home-link regression check:
+
+```sh
+DEPLOY_BASE_PATH=/diagram-creator-site/ npm run build
+DEPLOY_BASE_PATH=/diagram-creator-site/ PLAYWRIGHT_PRODUCTION=true npm test
+```
+
+To run the same suite against the deployed site without starting a local server:
+
+```sh
+PLAYWRIGHT_BASE_URL=https://timhacker.github.io/diagram-creator-site/ PLAYWRIGHT_PRODUCTION=true npm test
+```
+
 Delivery uses ATDD: agree observable scenarios, write and run failing acceptance tests, implement, then verify. [The show-and-tell log](docs/show-and-tell.md) records decisions, red/green evidence, findings and limitations.
 
 ## Delivery Tracking
@@ -47,6 +66,15 @@ Delivery uses ATDD: agree observable scenarios, write and run failing acceptance
 - [First release and acceptance criteria](https://github.com/TimHacker/diagram-creator/issues/1)
 - [Icon packs backlog](https://github.com/TimHacker/diagram-creator/issues/2)
 - [Architecture tools backlog](https://github.com/TimHacker/diagram-creator/issues/3)
+- [Deployment and live verification](https://github.com/TimHacker/diagram-creator/issues/5)
+
+## Deployment
+
+GitHub Pages rejected hosting directly from the private source repository on the current account plan. The separate [public site repository](https://github.com/TimHacker/diagram-creator-site) contains compiled HTML, JavaScript, CSS and fonts only, with no source maps, tests, source tree or private documentation.
+
+The Actions workflow builds for `/diagram-creator-site/`, runs production acceptance tests, and uploads the verified artefact. On successful main-branch runs, a separate publishing job copies that exact artefact into the public site repository. Its write credential is a deploy key restricted to that repository, stored as the `PAGES_DEPLOY_KEY` Actions secret. Pull requests cannot run the publishing job. Pages publishes from the public repository's main branch.
+
+No paid resources or account upgrades were provisioned. Hosting uses public-repository Pages; source CI remains subject to your existing Actions allowance. Public JavaScript bundles are downloadable, as with any client-side application.
 
 ## Implementation
 

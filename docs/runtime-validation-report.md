@@ -36,3 +36,14 @@ Additional regression checks cover mobile access to document controls and persis
 - Firefox, Safari, offline startup and cloud/team collaboration are not verified or claimed.
 - Image sharing is verified. Editable interchange and durable backups are outside this release.
 - Local checks and the implementation's remote CI run are green. This report is evidence for implementation commit `c6e45db`; subsequent documentation-only commits do not change the tested source.
+
+## Deployment Verification
+
+- Target: `https://timhacker.github.io/diagram-creator-site/`.
+- Source remains private; only compiled site output is held in the public Pages repository.
+- Deployment-path red check: 1 failed, exit 1, demonstrating root-relative production asset URLs before the fix.
+- Deployment-path green check: 1 passed, exit 0, after fixing Vite's base path and the home link.
+- Production-preview suite: 13 passed, 0 failed, exit 0, using `DEPLOY_BASE_PATH=/diagram-creator-site/ PLAYWRIGHT_PRODUCTION=true npm test -- --workers 4` after a production build.
+- Formatting and production build passed, exit 0.
+- Static-output assertion verified the Pages marker, absence of source maps, and absence of source/test folders before initial publication.
+- Initial public-site asset commit: `4dd15fb`. Remote Pages completion, publishing CI and live-site tests are pending separate verification.

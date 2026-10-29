@@ -471,7 +471,11 @@ function Editor() {
   return (
     <div className={`app ${exporting ? "exporting" : ""}`}>
       <header className="app-header">
-        <a className="brand" href="/" aria-label="Diagram Creator">
+        <a
+          className="brand"
+          href={import.meta.env.BASE_URL}
+          aria-label="Diagram Creator"
+        >
           <span className="brand-mark">
             <Workflow size={23} />
           </span>

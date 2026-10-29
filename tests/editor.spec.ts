@@ -25,7 +25,7 @@ async function connectPair(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   page.on("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "New diagram", exact: true }).click();
 });

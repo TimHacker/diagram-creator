@@ -84,7 +84,7 @@
 - Automated browser coverage is Chromium only; Firefox and Safari have not been verified.
 - Very large image exports are rejected to bound browser memory consumption.
 - Chromium logs transient ResizeObserver notifications during pointer resize. Geometry, save/reload and rendering behaviour are regression-tested; warnings have not been suppressed or claimed fixed. Tracked in [issue 4](https://github.com/TimHacker/diagram-creator/issues/4).
-- The site runs locally; source publication does not deploy a hosted website.
+- The site is now publicly hosted; sharing the editor URL does not share browser-local saved diagrams.
 
 ## Show-and-Tell Sequence
 
@@ -95,3 +95,32 @@
 5. Move a shape off-screen and export: the PNG still includes the whole diagram.
 6. Show mobile Properties below the canvas, then the regression tests that drove the fix.
 7. End with the final test/build results, limitations and backlog rather than claiming unsupported collaboration or cloud persistence.
+
+## 2026-10-29: Shareable Deployment
+
+### Decisions
+
+- Deployment requested in this conversation. With the user unavailable for further questions, use a public static URL, retain private source and avoid paid resources or account upgrades.
+- Direct Pages creation for the private repository failed with HTTP 422: the current account plan does not support Pages for that repository.
+- Use [a separate public build-output repository](https://github.com/TimHacker/diagram-creator-site), not a public source repository. Only browser-delivered HTML, JavaScript, CSS and fonts are published, with no source maps, tests or private documentation.
+- Site URL: `https://timhacker.github.io/diagram-creator-site/`. HTTPS is enforced by Pages.
+- Build and browser-test the actual production output under `/diagram-creator-site/`, rather than treating a passing root-path development server as deployment evidence.
+- CI publishes the exact verified artefact only after acceptance tests pass, using an SSH deploy key restricted to the public site repository. The private key was passed directly to Actions secrets and never printed or recorded.
+- Share the app URL to give colleagues their own editor; share exported PNGs to show a particular drawing. Localhost diagrams are not automatically migrated to the hosted origin.
+
+### ATDD and Findings
+
+- [Deployment issue 5](https://github.com/TimHacker/diagram-creator/issues/5) records acceptance criteria and is tracked in the Project.
+- New deployment test first failed (1 failed, exit 1): generated asset paths began at `/assets/` rather than the project path.
+- Fixed Vite's production base path and the home link. The same test then passed (1 passed, exit 0).
+- Updated browser tests to resolve `./` against the supplied site URL, allowing identical tests to exercise local production previews and the hosted project path.
+- Full production-preview gate: 13 passed, 0 failed (exit 0), plus passing build and formatting.
+- Pre-publication assertion caught a missing `.nojekyll` marker; no files were uploaded by that failed attempt. Added a concrete marker and rebuilt successfully before publication.
+- Published initial verified assets in public-site commit `4dd15fb`; Pages accepted configuration with HTTPS enforced.
+- Remote Pages deployment and live-site verification are checked separately from local production tests; results will be appended when confirmed.
+
+### Operational Trade-offs
+
+- Separate repositories preserve private source without a plan upgrade, at the cost of a small cross-repository publishing job and one restricted deploy key.
+- The site itself is public, not team-authenticated. There is still no server-side diagram storage or live collaboration.
+- GitHub Pages hosting uses the public-repository allowance; existing private-repository Actions usage still applies. No billing settings were changed.
